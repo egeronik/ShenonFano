@@ -13,7 +13,7 @@ struct node {
     node* right = NULL;//0
 };
 
-
+//Подсчёт количества вхождений элемента
 vector<pair<int, char>> countEntry(string s) {
     map<char, int> m;//Key, count
     vector<pair<int, char>> v;//Count, key
@@ -28,28 +28,31 @@ vector<pair<int, char>> countEntry(string s) {
     return v;
 }
 
-
+//Генерация дерева шенон фано
 node* makeSFTree(vector<pair<int, char>> v) {
-    node* ans = new node;
-    if (v.size() == 1) {
+    node* ans = new node;//узел итогового дерева
+    if (v.size() == 1) {//Если в массиве остался один элемент, разбить его невозможно, возвращаем
         ans->c = v[0].second;
         ans->n = v[0].first;
         return ans;
     }
     
     int right = 0, left = 0;
-    for (int i = 0; i < v.size(); ++i) {
+    for (int i = 0; i < v.size(); ++i) {//Считаем общий вес всего массива
         right += v[i].first;
     }
+    //В right лежит вес всего массива, в left 0,
+    //Мы циклом идём по массиву увиличивая left и уменьшая right
+    //Пока не дойдём до места где левая часть будет больше либо равна правой, тут и разбиваем на два
     for (int i = 0; i < v.size(); ++i) {
-        left += v[i].first;
-        right -= v[i].first;
+        left += v[i].first;//Увеличииваем вес левой части
+        right -= v[i].first;//Уменьшаем вес правой
         if (left >= right) {
-            vector<pair<int, char>> lv(v.begin(), v.begin()+i+1);
-            vector<pair<int, char>> rv(v.begin()+i+1, v.end());
-            node* l = makeSFTree(lv);
-            node* r = makeSFTree(rv);
-            ans->n = l->n + r->n;
+            vector<pair<int, char>> lv(v.begin(), v.begin()+i+1);//Генерация левой полвины массива
+            vector<pair<int, char>> rv(v.begin()+i+1, v.end());//Правой
+            node* l = makeSFTree(lv);//Постройка Шенон фано дерева на левой половине
+            node* r = makeSFTree(rv);//Постройка дерева на правой
+            ans->n = l->n + r->n; //Запись данных в новый узел
             ans->left = l;
             ans->right = r;
             return ans;
@@ -71,22 +74,23 @@ void traversal(node* myNode, int l) {
 
 map<char, string> mChSt;
 map<string, char> mStCh;
-
-void makeMap(node* N, string path) {
+//Создаём пары ключ-код 
+void makeMap(node* N, string path) {//Path-путь
     if (N == NULL) return;
-    if (N->left == NULL && N->right == NULL) {
+    if (N->left == NULL && N->right == NULL) { //если мы пришли в лист то записываем в map пару
         mChSt[N->c] = path;
         mStCh[path] = N->c;
     }
     else {
-        makeMap(N->left, path + "0");
-        makeMap(N->right, path + "1");
+        makeMap(N->left, path + "0"); //Рекурсивный проход по дереву влево
+        makeMap(N->right, path + "1"); //Рекурсивный проход по дереву вправо
+        
     }
 }
 
 
 
-string codeString(string s) {
+string codeString(string s) {//Кодирование строки
     string ans = "";
     for (int i = 0; i < s.length(); ++i) {
         ans += mChSt[s[i]];
